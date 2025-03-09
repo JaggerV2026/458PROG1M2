@@ -3,7 +3,7 @@ import java.util.Hashtable;
 
 public class MIPSAssembler {
 
-    public Dictionary<String, Integer> registerDict = new Hashtable<>();
+    private Dictionary<String, Integer> registerDict = new Hashtable<>();
 
     public MIPSAssembler(){
         registerDict.put("$zero", 0);
