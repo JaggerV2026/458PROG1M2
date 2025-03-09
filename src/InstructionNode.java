@@ -2,7 +2,7 @@ public class InstructionNode {
 
     private String instruction;
     private int address;
-    private InstructionNode nextNode;
+    private InstructionNode nextNode = null;
 
     public InstructionNode(String instruction, int address){
         this.instruction = instruction;
