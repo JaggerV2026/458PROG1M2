@@ -52,7 +52,6 @@ public class Main {
                String[] labelCheck = instruction.split(regex);
                if(!instruction.isEmpty() && instruction.charAt(0) != '#' && labelCheck[0].contains(":")){
                    //Address of label is next line
-                   currentAddressIndex += 4;
                    currentNode.setNext(new InstructionNode(instruction, currentAddressIndex));
                    currentNode = currentNode.next();
                }
