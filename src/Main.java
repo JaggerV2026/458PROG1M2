@@ -18,7 +18,8 @@ public class Main {
        String regex = "[\\s]";
 
        try {
-           File asmInput = new File(args[0]);
+           File asmInput = new File("TestFile/EvenOrOdd.asm");
+           //File asmInput = new File(args[0]);
            Scanner asmReader = new Scanner(asmInput);
            //Look for .data section
            while(asmReader.hasNextLine() && !inDataSection){
@@ -67,6 +68,31 @@ public class Main {
        } catch (FileNotFoundException e){
            System.out.println("File not found");
        }
+       //Writing .data file
+       currentNode = dataHead.next();
+       int strIndex = 0;
+       DataStack datastack = new DataStack();
+       while(currentNode != null){
+           int strStart = currentNode.getInstruction().indexOf("\"") + 1;
+           int strEnd = currentNode.getInstruction().length() - 1;
+           String data = currentNode.getInstruction().substring(strStart, strEnd);
+           for(int i = 0; i < data.length(); i++){
+               datastack.push(data.charAt(i));
+               strIndex++;
+               //Write to file every 4 characters
+               if(strIndex == 4){
+                   strIndex = 0;
+
+               }
+           }
+           currentNode = currentNode.next();
+       }
+       //Write to file if a line isn't full but data has been read
+       if(strIndex != 0){
+
+       }
+
+       /*
        //testing
        currentNode = dataHead;
        while(currentNode.next() != null){
@@ -78,5 +104,6 @@ public class Main {
            currentNode = currentNode.next();
            System.out.println(currentNode.getInstruction() + ", " + String.format("%08x", currentNode.getAddress()));
        }
+       */
    }
 }
