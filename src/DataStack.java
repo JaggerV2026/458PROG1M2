@@ -29,6 +29,7 @@ public class DataStack {
     //Reset stack to all zeros. Useful to handle unfilled values
     private void resetStack(){
         Arrays.fill(stack, 0);
+        index = stack.length - 1;
     }
 
 }
