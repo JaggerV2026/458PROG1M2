@@ -17,6 +17,7 @@ public class Main {
        InstructionNode dataHead = new InstructionNode();
        InstructionNode textHead = new InstructionNode();
        InstructionNode currentNode = dataHead;
+       InstructionNode preCurrentNode = textHead;
 
        Dictionary<String, Integer> labelDict = new Hashtable<>();
 
@@ -93,7 +94,7 @@ public class Main {
            BufferedWriter dataWriter = new BufferedWriter(new FileWriter("data.txt"));
            while (currentNode != null) {
                //Saving label
-               int labelStart = currentNode.getInstruction().indexOf(":") - 1;
+               int labelStart = currentNode.getInstruction().indexOf(":");
                labelDict.put(currentNode.getInstruction().substring(0,labelStart),currentNode.getAddress());
                //Data file writing
                int strStart = currentNode.getInstruction().indexOf("\"") + 1;
@@ -130,7 +131,91 @@ public class Main {
        catch (IOException e){
            System.out.println("Error while writing to data.txt");
        }
-       /*
+
+       //Converting pseudo instructions
+       currentNode = textHead.next();
+       //Amount to increase each address by
+       int addressDisplacement = 0;
+       String newInstruction = "";
+       int newAddress = 0;
+       while(currentNode != null){
+           currentNode.incrementAddress(addressDisplacement);
+           String commasRemoved = currentNode.getInstruction().replaceAll(",", "");
+           String spacesRemoved = commasRemoved.replaceAll("\\s{2,}", " ");
+           String[] argArray = spacesRemoved.split(regex);
+           switch (argArray[0]){
+               case "li":
+                   //lui
+                   String liImmediate = String.format("%04x", (Integer.parseInt(argArray[2]) >> 4));
+                   newInstruction = "lui $at, " + liImmediate;
+                   newAddress = currentNode.getAddress();
+                   preCurrentNode.setNext(new InstructionNode(newInstruction, newAddress));
+                   preCurrentNode = preCurrentNode.next();
+                   //ori
+                   liImmediate = String.format("%04x", (Integer.parseInt(argArray[2]) & 4095));
+                   newInstruction = "ori ";
+                   newInstruction += argArray[1];
+                   newInstruction += ", ";
+                   newInstruction += liImmediate;
+                   newAddress = newAddress + 4;
+                   preCurrentNode.setNext(new InstructionNode(newInstruction, newAddress));
+                   preCurrentNode = preCurrentNode.next();
+                   preCurrentNode.setNext(currentNode.next());
+                   addressDisplacement += 4;
+                   break;
+               case "la":
+                   //lui
+                   newInstruction = "lui $at, 4097";
+                   newAddress = currentNode.getAddress();
+                   preCurrentNode.setNext(new InstructionNode(newInstruction, newAddress));
+                   preCurrentNode = preCurrentNode.next();
+                   //ori
+                   newInstruction = "ori ";
+                   newInstruction += argArray[1];
+                   newInstruction += ", $at, ";
+                   newInstruction += Integer.toString(labelDict.get(argArray[2]) - dataAddressIndex);
+                   newAddress = newAddress + 4;
+                   preCurrentNode.setNext(new InstructionNode(newInstruction, newAddress));
+                   preCurrentNode = preCurrentNode.next();
+                   preCurrentNode.setNext(currentNode.next());
+                   addressDisplacement += 4;
+                   break;
+               case "blt":
+                   //slt
+                   newInstruction = "slt $at, ";
+                   newInstruction += argArray[1];
+                   newInstruction += ", ";
+                   newInstruction += argArray[2];
+                   newAddress = currentNode.getAddress();
+                   preCurrentNode.setNext(new InstructionNode(newInstruction, newAddress));
+                   preCurrentNode = preCurrentNode.next();
+                   //bne
+                   newInstruction = "bne $at, $zero, ";
+                   newInstruction += argArray[3];
+                   newAddress = newAddress + 4;
+                   preCurrentNode.setNext(new InstructionNode(newInstruction, newAddress));
+                   preCurrentNode = preCurrentNode.next();
+                   preCurrentNode.setNext(currentNode.next());
+                   addressDisplacement += 4;
+                   break;
+               case "move":
+                   //add
+                   newInstruction = "add ";
+                   newInstruction += argArray[1];
+                   newInstruction += ", ";
+                   newInstruction += argArray[2];
+                   newInstruction += ", $zero";
+                   newAddress = currentNode.getAddress();
+                   preCurrentNode.setNext(new InstructionNode(newInstruction, newAddress));
+                   preCurrentNode = preCurrentNode.next();
+                   preCurrentNode.setNext(currentNode.next());
+                   break;
+               default: //If no change is needed
+                   preCurrentNode = currentNode;
+           }
+           currentNode = currentNode.next();
+       }
+
        //testing
        currentNode = dataHead;
        while(currentNode.next() != null){
@@ -142,6 +227,6 @@ public class Main {
            currentNode = currentNode.next();
            System.out.println(currentNode.getInstruction() + ", " + String.format("%08x", currentNode.getAddress()));
        }
-       */
+
    }
 }

@@ -16,7 +16,7 @@
 	syscall
 	
 	# determine even/odd status
-	#move $t4, $v0
+	move $t4, $v0
 	add $t4, $zero, $v0
 	andi $t0, $t4, 0x1
 	

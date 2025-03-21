@@ -31,6 +31,8 @@ public class InstructionNode {
         address = newAddress;
     }
 
+    public void incrementAddress(int increment) { address += increment; }
+
     public InstructionNode next(){
         return nextNode;
     }
