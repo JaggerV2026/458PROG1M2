@@ -148,9 +148,10 @@ public class Main {
            String[] argArray = spacesRemoved.split(regex);
            switch (argArray[0]){
                case "li":
+                   //Adding 0x to allow the assembler to read it
                    //lui
                    String liImmediate = String.format("%04x", (Integer.parseInt(argArray[2]) >> 4));
-                   newInstruction = "lui $at, " + liImmediate;
+                   newInstruction = "lui $at, 0x" + liImmediate;
                    newAddress = currentNode.getAddress();
                    preCurrentNode.setNext(new InstructionNode(newInstruction, newAddress));
                    preCurrentNode = preCurrentNode.next();
@@ -158,7 +159,7 @@ public class Main {
                    liImmediate = String.format("%04x", (Integer.parseInt(argArray[2]) & 4095));
                    newInstruction = "ori ";
                    newInstruction += argArray[1];
-                   newInstruction += ", ";
+                   newInstruction += ", $at, 0x";
                    newInstruction += liImmediate;
                    newAddress = newAddress + 4;
                    preCurrentNode.setNext(new InstructionNode(newInstruction, newAddress));
@@ -272,18 +273,23 @@ public class Main {
            currentNode = currentNode.next();
        }
 
+
        //write to file
        currentNode = textHead.next();
        try{
            BufferedWriter textWriter = new BufferedWriter(new FileWriter("text.txt"));
            while(currentNode != null){
-
+               textWriter.write(assembler.ConvertMIPS(currentNode.getInstruction()));
+               textWriter.newLine();
+               currentNode = currentNode.next();
            }
            textWriter.close();
        }
        catch(IOException e){
-
+           System.out.println("Error while writing to text.txt");
        }
+
+
         /*
        //testing
        currentNode = dataHead;
