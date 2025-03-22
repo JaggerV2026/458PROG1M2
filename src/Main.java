@@ -25,6 +25,13 @@ public class Main {
 
        String regex = "[\\s]";
 
+       //Amount to increase each address by
+       int addressDisplacement = 0;
+       String newInstruction = "";
+       int newAddress = 0;
+
+       MIPSAssembler assembler = new MIPSAssembler();
+
        try {
            File asmInput = new File("TestFile/EvenOrOdd.asm");
            //File asmInput = new File(args[0]);
@@ -94,8 +101,8 @@ public class Main {
            BufferedWriter dataWriter = new BufferedWriter(new FileWriter("data.txt"));
            while (currentNode != null) {
                //Saving label
-               int labelStart = currentNode.getInstruction().indexOf(":");
-               labelDict.put(currentNode.getInstruction().substring(0,labelStart),currentNode.getAddress());
+               int labelColon = currentNode.getInstruction().indexOf(":");
+               labelDict.put(currentNode.getInstruction().substring(0,labelColon),currentNode.getAddress());
                //Data file writing
                int strStart = currentNode.getInstruction().indexOf("\"") + 1;
                int strEnd = currentNode.getInstruction().length() - 1;
@@ -134,10 +141,6 @@ public class Main {
 
        //Converting pseudo instructions
        currentNode = textHead.next();
-       //Amount to increase each address by
-       int addressDisplacement = 0;
-       String newInstruction = "";
-       int newAddress = 0;
        while(currentNode != null){
            currentNode.incrementAddress(addressDisplacement);
            String commasRemoved = currentNode.getInstruction().replaceAll(",", "");
@@ -216,6 +219,72 @@ public class Main {
            currentNode = currentNode.next();
        }
 
+       //collect labels
+       currentNode = textHead.next();
+       preCurrentNode = textHead;
+       while(currentNode != null) {
+           //Line contains label
+           if (currentNode.getInstruction().contains(":")) {
+               //Saving label
+               int labelColon = currentNode.getInstruction().indexOf(":");
+               labelDict.put(currentNode.getInstruction().substring(0, labelColon), currentNode.getAddress());
+               String instructionAfterLabel = currentNode.getInstruction().substring(labelColon+1);
+               //Remove node if line is just label
+               if(instructionAfterLabel.isEmpty()){
+                   preCurrentNode.setNext(currentNode.next());
+               }
+               //Remove label from instruction for writing to file
+               else{
+                   currentNode.setInstruction(instructionAfterLabel);
+               }
+           }
+           preCurrentNode = currentNode;
+           currentNode = currentNode.next();
+       }
+
+       //Apply labels
+       currentNode = textHead.next();
+       while(currentNode != null){
+           String commasRemoved = currentNode.getInstruction().replaceAll(",", "");
+           String spacesRemoved = commasRemoved.replaceAll("\\s{2,}", " ");
+           String[] argArray = spacesRemoved.split(regex);
+           //Both in format instr rs, rt, offset
+           if((argArray[0].equals("beq") || argArray[0].equals("bne")) && labelDict.get(argArray[3]) != null){
+               argArray[3] = labelDict.get(argArray[3]).toString();
+               newInstruction = argArray[0];
+               newInstruction += " ";
+               newInstruction += argArray[1];
+               newInstruction += ", ";
+               newInstruction += argArray[2];
+               newInstruction += ", ";
+               newInstruction += argArray[3];
+               currentNode.setInstruction(newInstruction);
+
+           }
+           //j format is unique
+           else if(argArray[0].equals("j") && labelDict.get(argArray[1]) != null){
+               argArray[1] = labelDict.get(argArray[1]).toString();
+               newInstruction = argArray[0];
+               newInstruction += " ";
+               newInstruction += argArray[1];
+               currentNode.setInstruction(newInstruction);
+           }
+           currentNode = currentNode.next();
+       }
+
+       //write to file
+       currentNode = textHead.next();
+       try{
+           BufferedWriter textWriter = new BufferedWriter(new FileWriter("text.txt"));
+           while(currentNode != null){
+
+           }
+           textWriter.close();
+       }
+       catch(IOException e){
+
+       }
+        /*
        //testing
        currentNode = dataHead;
        while(currentNode.next() != null){
@@ -227,6 +296,6 @@ public class Main {
            currentNode = currentNode.next();
            System.out.println(currentNode.getInstruction() + ", " + String.format("%08x", currentNode.getAddress()));
        }
-
+        */
    }
 }

@@ -39,13 +39,9 @@ public class MIPSAssembler {
         registerDict.put("$fp", 30);
         registerDict.put("$ra", 31);
     }
-    public String ConvertMIPS(String[] args) {
-        //Commenting this out for testing purposes
-        String mipsArguments = args[0];
-        //Test argument
-        //String mipsArguments = "sw $t6, ($s2)";
+    public String ConvertMIPS(String instruction) {
         String regex = "[\\s]";
-        String commasRemoved = mipsArguments.replaceAll(",", "");
+        String commasRemoved = instruction.replaceAll(",", "");
         String spacesRemoved = commasRemoved.replaceAll("\\s{2,}", " ");
         String[] argArray = spacesRemoved.split(regex);
         /*
