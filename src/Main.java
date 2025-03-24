@@ -25,6 +25,10 @@ public class Main {
 
        String regex = "[\\s]";
 
+       String fileRegex = "[\\\\/]";
+       //Used for naming output files
+       String fileName = "";
+
        //Amount to increase each address by
        int addressDisplacement = 0;
        String newInstruction = "";
@@ -33,7 +37,11 @@ public class Main {
        MIPSAssembler assembler = new MIPSAssembler();
 
        try {
-           File asmInput = new File("TestFile/EvenOrOdd.asm");
+           fileName = args[0];
+           String[] fileArray = fileName.split(fileRegex);
+           fileName = fileArray[fileArray.length-1];
+           fileName = fileName.substring(0, fileName.indexOf("."));
+           File asmInput = new File(args[0]);
            //File asmInput = new File(args[0]);
            Scanner asmReader = new Scanner(asmInput);
            //Look for .data section
@@ -82,23 +90,25 @@ public class Main {
            asmReader.close();
        } catch (FileNotFoundException e){
            System.out.println("File not found");
+           return;
        }
        //Create .data file
        try{
-            File dataFile = new File("data.txt");
+            File dataFile = new File(fileName + ".data");
             if(!dataFile.createNewFile()){
-               System.out.println("data.txt already exists");
+               System.out.println(".data already exists");
             }
        }
        catch (IOException e){
-            System.out.println("Error when creating data.txt");
+            System.out.println("Error when creating .data");
+            return;
        }
        //Writing .data file
        currentNode = dataHead.next();
        int strIndex = 0;
        DataStack datastack = new DataStack();
        try {
-           BufferedWriter dataWriter = new BufferedWriter(new FileWriter("data.txt"));
+           BufferedWriter dataWriter = new BufferedWriter(new FileWriter(fileName + ".data"));
            while (currentNode != null) {
                //Saving label
                int labelColon = currentNode.getInstruction().indexOf(":");
@@ -136,7 +146,8 @@ public class Main {
            dataWriter.close();
        }
        catch (IOException e){
-           System.out.println("Error while writing to data.txt");
+           System.out.println("Error while writing to .data");
+           return;
        }
 
        //Converting pseudo instructions
@@ -251,33 +262,47 @@ public class Main {
            String[] argArray = spacesRemoved.split(regex);
            //Both in format instr rs, rt, offset
            if((argArray[0].equals("beq") || argArray[0].equals("bne")) && labelDict.get(argArray[3]) != null){
-               argArray[3] = labelDict.get(argArray[3]).toString();
+               //Difference in label address and current address + 4. Divided by 4 for word addressing
+               //Not handling illegal branches that are larger than 16 bits
+               int branchAddress = (labelDict.get(argArray[3]) - (currentNode.getAddress() + 4)) / 4;
                newInstruction = argArray[0];
                newInstruction += " ";
                newInstruction += argArray[1];
                newInstruction += ", ";
                newInstruction += argArray[2];
                newInstruction += ", ";
-               newInstruction += argArray[3];
+               newInstruction += branchAddress;
                currentNode.setInstruction(newInstruction);
 
            }
            //j format is unique
            else if(argArray[0].equals("j") && labelDict.get(argArray[1]) != null){
-               argArray[1] = labelDict.get(argArray[1]).toString();
+               //Divide by 4 to get word addressing. Number is a bit string of length 26 and all 1
+               int jumpAddress = (labelDict.get(argArray[1]) / 4) & 67108863;
                newInstruction = argArray[0];
                newInstruction += " ";
-               newInstruction += argArray[1];
+               newInstruction += jumpAddress;
                currentNode.setInstruction(newInstruction);
            }
            currentNode = currentNode.next();
        }
 
 
+       //Create .text file
+       try{
+           File dataFile = new File(fileName + ".text");
+           if(!dataFile.createNewFile()){
+               System.out.println(".text already exists");
+           }
+       }
+       catch (IOException e){
+           System.out.println("Error when creating .text");
+           return;
+       }
        //write to file
        currentNode = textHead.next();
        try{
-           BufferedWriter textWriter = new BufferedWriter(new FileWriter("text.txt"));
+           BufferedWriter textWriter = new BufferedWriter(new FileWriter(fileName + ".text"));
            while(currentNode != null){
                textWriter.write(assembler.ConvertMIPS(currentNode.getInstruction()));
                textWriter.newLine();
@@ -286,7 +311,8 @@ public class Main {
            textWriter.close();
        }
        catch(IOException e){
-           System.out.println("Error while writing to text.txt");
+           System.out.println("Error while writing to .text");
+           return;
        }
 
 
@@ -302,6 +328,8 @@ public class Main {
            currentNode = currentNode.next();
            System.out.println(currentNode.getInstruction() + ", " + String.format("%08x", currentNode.getAddress()));
        }
-        */
+       */
+
+
    }
 }
