@@ -28,6 +28,9 @@ public class Main {
        String fileRegex = "[\\\\/]";
        //Used for naming output files
        String fileName = "";
+       //For saving files
+       String filePath = "";
+       String fileSeparator = "/";
 
        //Amount to increase each address by
        int addressDisplacement = 0;
@@ -41,8 +44,19 @@ public class Main {
            String[] fileArray = fileName.split(fileRegex);
            fileName = fileArray[fileArray.length-1];
            fileName = fileName.substring(0, fileName.indexOf("."));
+
+           //Getting file path
+           //Using this if statement since I know different systems handle this differently
+           //This isn't a perfect solution, but it's fine for now
+           if(args[0].contains("/")){
+               filePath = args[0].substring(0, args[0].lastIndexOf("/"));
+           }
+           else {
+               filePath = args[0].substring(0, args[0].lastIndexOf("\\"));
+               fileSeparator = "\\";
+           }
+
            File asmInput = new File(args[0]);
-           //File asmInput = new File(args[0]);
            Scanner asmReader = new Scanner(asmInput);
            //Look for .data section
            while(asmReader.hasNextLine() && !inDataSection){
@@ -94,7 +108,7 @@ public class Main {
        }
        //Create .data file
        try{
-            File dataFile = new File(fileName + ".data");
+            File dataFile = new File(filePath + fileSeparator + fileName + ".data");
             if(!dataFile.createNewFile()){
                System.out.println(".data already exists");
             }
@@ -108,7 +122,7 @@ public class Main {
        int strIndex = 0;
        DataStack datastack = new DataStack();
        try {
-           BufferedWriter dataWriter = new BufferedWriter(new FileWriter(fileName + ".data"));
+           BufferedWriter dataWriter = new BufferedWriter(new FileWriter(filePath + fileSeparator + fileName + ".data"));
            while (currentNode != null) {
                //Saving label
                int labelColon = currentNode.getInstruction().indexOf(":");
@@ -290,7 +304,7 @@ public class Main {
 
        //Create .text file
        try{
-           File dataFile = new File(fileName + ".text");
+           File dataFile = new File(filePath + fileSeparator + fileName + ".text");
            if(!dataFile.createNewFile()){
                System.out.println(".text already exists");
            }
@@ -302,7 +316,7 @@ public class Main {
        //write to file
        currentNode = textHead.next();
        try{
-           BufferedWriter textWriter = new BufferedWriter(new FileWriter(fileName + ".text"));
+           BufferedWriter textWriter = new BufferedWriter(new FileWriter(filePath + fileSeparator + fileName + ".text"));
            while(currentNode != null){
                textWriter.write(assembler.ConvertMIPS(currentNode.getInstruction()));
                textWriter.newLine();
